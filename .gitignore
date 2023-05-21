@@ -15,3 +15,7 @@ cmake-build-*/
 .idea/
 .vscode/
 
+# Generated files
+/lua51/binaryninja/_binaryninjacore.lua
+/lua51/binaryninja/_cdefs.lua
+/lua51/binaryninja/enums.lua

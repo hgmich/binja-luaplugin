@@ -26,6 +26,7 @@ if core.BNGetProduct() == 'Binary Ninja Enterprise Client' then
   enterprise = include_splat('enterprise')
 end
 
+local enums = include_splat('enums')
 local settings = include_splat('settings')
 
 function binaryninja.getUniqueIdentifier()

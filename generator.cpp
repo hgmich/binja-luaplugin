@@ -63,23 +63,22 @@ void WriteEnumDefinition(
 	if (enumSkipList.count(name) > 0)
 		return;
 
-	fprintf(cdefs, "\n\ttypedef ");
+	fprintf(cdefs, "\ntypedef ");
 	//	fprintf(cdefs, "struct %s {\n", name.c_str());
 	fprintf(cdefs, "enum %s {\n", name.c_str());
 
-	fprintf(enums, "\nenums.%s = cdefs.metatype(cdefs.typeof('struct { BN%s; } '), {\n", name.c_str(), name.c_str());
-	fprintf(enums, "\t__index = {\n");
+	fprintf(enums, "\nlocal %sTy = ffi.typeof('BN%s')\n", name.c_str(), name.c_str());
+	fprintf(enums, "enums.%s = {\n", name.c_str());
+	fprintf(enums, "  ctype = %sTy,\n", name.c_str());
 	for (auto& i : typ->GetEnumeration()->GetMembers())
 	{
-		fprintf(cdefs, "\t\t%s = %" PRId32 ",\n", i.name.c_str(), (int32_t)i.value);
-		fprintf(enums, "\t\t%s = %" PRId32 ",\n", i.name.c_str(), (int32_t)i.value);
+		fprintf(cdefs, "\t%s = %" PRId32 ",\n", i.name.c_str(), (int32_t)i.value);
+		fprintf(enums, "  %s = %sTy(%" PRId32 "),\n", i.name.c_str(), name.c_str(), (int32_t)i.value);
 	}
 
 	//	fprintf(cdefs, "\t};\n");
 	fprintf(cdefs, "} BN%s;\n\n", name.c_str());
-
-	fprintf(enums, "\t}\n");
-	fprintf(enums, "})\n");
+	fprintf(enums, "}\n");
 
 	enumSkipList.insert(name);
 }
@@ -118,7 +117,7 @@ void WriteStructDefinition(Ref<Type> typ, unordered_set<string>& enumSkipList, u
 	}
 
 	fprintf(cdefs, "struct %s {\n", name.c_str());
-	fprintf(out, "core.%s = cdefs.typeof('struct %s')\n\n", name.c_str(), name.c_str());
+	fprintf(out, "core.%s = ffi.typeof('struct %s')\n\n", name.c_str(), name.c_str());
 
 	// python uses str's, C uses byte-arrays
 	bool stringField = false;
@@ -186,47 +185,15 @@ int main(int argc, char* argv[])
 	FILE* enums = fopen(argv[4], "w");
 
 	fprintf(out, "local cdefs = require('binaryninja._cdefs')\n\n");
+	fprintf(out, "local ffi = require('ffi')\n\n");
 
 	fprintf(cdefs, "local ffi = require('ffi')\n");
 	fprintf(cdefs, "\nffi.cdef [[");
 
-	fprintf(enums, "local cdefs = require('binaryninja._cdefs')\n");
-	fprintf(enums, "\nlocal enums = {}\n");
+	fprintf(enums, "local ffi = require('ffi')\n");
+	fprintf(enums, "\nlocal enums = {}\n\n");
 
 	fprintf(out, "local core = {}\n\n");
-
-	//	fprintf(out, "# Load core module\n");
-	//	fprintf(out, "import platform\n");
-	//	fprintf(out, "core = None\n");
-	//	fprintf(out, "_base_path = None\n");
-	//	fprintf(out, "core_platform = platform.system()\n");
-	//	fprintf(out, "if core_platform == 'Darwin':\n");
-	//	fprintf(out, "\t_base_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'MacOS')\n");
-	//	fprintf(out, "\tcore = ctypes.CDLL(os.path.join(_base_path, 'libbinaryninjacore.dylib'))\n\n");
-	//	fprintf(out, "elif core_platform == 'Linux':\n");
-	//	fprintf(out, "\t_base_path = os.path.join(os.path.dirname(__file__), '..', '..')\n");
-	//	fprintf(out, "\tcore = ctypes.CDLL(os.path.join(_base_path, 'libbinaryninjacore.so.1'))\n\n");
-	//	fprintf(out, "elif (core_platform == 'Windows') or (core_platform.find('CYGWIN_NT') == 0):\n");
-	//	fprintf(out, "\t_base_path = os.path.join(os.path.dirname(__file__), '..', '..')\n");
-	//	fprintf(out, "\tcore = ctypes.CDLL(os.path.join(_base_path, 'binaryninjacore.dll'))\n");
-	//	fprintf(out, "else:\n");
-	//	fprintf(out, "\traise Exception('OS not supported')\n\n\n");
-	//
-	//	fprintf(out, "def cstr(var: Optional[AnyStr]) -> Optional[bytes]:\n");
-	//	fprintf(out, "	if var is None:\n");
-	//	fprintf(out, "		return None\n");
-	//	fprintf(out, "	if isinstance(var, bytes):\n");
-	//	fprintf(out, "		return var\n");
-	//	fprintf(out, "	return var.encode('utf-8')\n\n\n");
-	//
-	//	fprintf(out, "def pyNativeStr(arg: AnyStr) -> str:\n");
-	//	fprintf(out, "	if isinstance(arg, str):\n");
-	//	fprintf(out, "		return arg\n");
-	//	fprintf(out, "	else:\n");
-	//	fprintf(out, "		return arg.decode('utf8')\n\n\n");
-	//
-	//	fprintf(out, "def free_string(value:ctypes.c_char_p) -> None:\n");
-	//	fprintf(out, "	BNFreeString(ctypes.cast(value, ctypes.POINTER(ctypes.c_byte)))\n\n");
 
 	// Create type objects
 	fprintf(out, "-- Type definitions\n");
@@ -247,13 +214,6 @@ int main(int argc, char* argv[])
 		{
 			WriteEnumDefinition(i.second, enumSkipList, name, cdefs, enums);
 		}
-		//		else if ((i.second->GetClass() == BoolTypeClass) || (i.second->GetClass() == IntegerTypeClass)
-		//			|| (i.second->GetClass() == FloatTypeClass) || (i.second->GetClass() == ArrayTypeClass))
-		//		{
-		//			fprintf(out, "%s = ", name.c_str());
-		//			OutputType(out, i.second);
-		//			fprintf(out, "\n");
-		//		}
 	}
 
 	//	fprintf(out, "\n-- Structure definitions\n");
@@ -388,7 +348,7 @@ int main(int argc, char* argv[])
 				{
 					firstArg = false;
 				}
-				fprintf(cdefs, "\t");
+				fprintf(cdefs, "  ");
 
 				if (j.type->IsEnumReference())
 				{
@@ -413,7 +373,7 @@ int main(int argc, char* argv[])
 				{
 					fprintf(cdefs, "\t...\n);\n\n");
 					fprintf(out, "function core.%s(...)\n", name.c_str());
-					fprintf(out, "\treturn cdefs.C.%s(...)\n", name.c_str());
+					fprintf(out, "  return cdefs.%s(...)\n", name.c_str());
 					fprintf(out, "end\n");
 					continue;
 				}
@@ -421,7 +381,7 @@ int main(int argc, char* argv[])
 				{
 					fprintf(cdefs, "\tBNLogLevel level,\n\t...\n);\n\n");
 					fprintf(out, "function core.%s(level, ...)\n", name.c_str());
-					fprintf(out, "\treturn cdefs.C.%s(level, ...)\n", name.c_str());
+					fprintf(out, "  return cdefs.%s(level, ...)\n", name.c_str());
 					fprintf(out, "end\n");
 					continue;
 				}
@@ -443,7 +403,7 @@ int main(int argc, char* argv[])
 
 				if (argN > 0)
 					fprintf(out, ", ");
-				fprintf(out, "\n\t\t");
+				fprintf(out, "\n    ");
 				fprintf(out, "%s", argName.c_str());
 				//				if (swizzleArgs)
 				//					OutputSwizzledType(out, arg.type);
@@ -461,7 +421,7 @@ int main(int argc, char* argv[])
 		//		fprintf(out, ":\n");
 		fprintf(out, "\n)\n");
 
-		string stringArgFuncCall = "cdefs.C." + name + "(";
+		string stringArgFuncCall = "cdefs." + name + "(";
 		size_t argN = 0;
 		for (auto& arg : i.second->GetParameters())
 		{
@@ -492,28 +452,28 @@ int main(int argc, char* argv[])
 		if (stringResult)
 		{
 			// Emit wrapper to get Python string and free native memory
-			fprintf(out, "\tlocal result = ");
+			fprintf(out, "  local result = ");
 			fprintf(out, "%s\n", stringArgFuncCall.c_str());
-			fprintf(out, "\tlocal string = cdefs.string(result)\n");
+			fprintf(out, "  local string = ffi.string(result)\n");
 			if (rustFFI)
-				fprintf(out, "\tcore.BNRustFreeString(result)\n");
+				fprintf(out, "  core.BNRustFreeString(result)\n");
 			else
-				fprintf(out, "\tcore.BNFreeString(result)\n");
-			fprintf(out, "\treturn string\n");
+				fprintf(out, "  core.BNFreeString(result)\n");
+			fprintf(out, "  return string\n");
 		}
 		else if (pointerResult)
 		{
 			// Emit wrapper to return None on null pointer
-			fprintf(out, "\tlocal result = ");
+			fprintf(out, "  local result = ");
 			fprintf(out, "%s\n", stringArgFuncCall.c_str());
-			fprintf(out, "\tif not result then \n");
-			fprintf(out, "\t\treturn nil\n");
-			fprintf(out, "\tend\n");
-			fprintf(out, "\n\treturn result\n");
+			fprintf(out, "  if not result then \n");
+			fprintf(out, "    return nil\n");
+			fprintf(out, "  end\n");
+			fprintf(out, "\n  return result\n");
 		}
 		else
 		{
-			fprintf(out, "\treturn ");
+			fprintf(out, "  return ");
 			fprintf(out, "%s\n", stringArgFuncCall.c_str());
 		}
 		fprintf(out, "end\n");
@@ -533,7 +493,7 @@ int main(int argc, char* argv[])
 	fprintf(out, "\nreturn core\n");
 
 	fprintf(cdefs, "\n]]\n");
-	fprintf(cdefs, "\nreturn ffi\n");
+	fprintf(cdefs, "\nreturn ffi.load('binaryninjacore')\n");
 
 	fprintf(enums, "\nreturn enums\n");
 
