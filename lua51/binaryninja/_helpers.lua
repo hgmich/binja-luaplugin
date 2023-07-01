@@ -8,7 +8,13 @@ end
 
 local helpers = {}
 
+_enableDefaultLog = true
+_pluginInit = false
+
 function helpers._initPlugins()
+  local Settings = require('binaryninja.settings').Settings
+  local LogLevel = require('binaryninja.enums').LogLevel
+
   if not core.BNIsUIEnabled() and core.BNGetProduct() == 'Binary Ninja Enterprise Client' then
     pcall(function()
       enterprise.authenticateWithMethod('Keychain')
@@ -25,20 +31,22 @@ function helpers._initPlugins()
     -- The first call to BNInitCorePlugins returns true for successful initialization and true in this context indicates headless operation.
     -- The result is pulled from BNInitPlugins as that now wraps BNInitCorePlugins.
     local isHeadlessInitOnce = core.BNInitPlugins(not os.getenv('BN_DISABLE_USER_PLUGINS'))
-    --local minLevel = Settings().get_string('python.log.minLevel')
+    local minLevel = Settings:new().getString('python.log.minLevel')
 
-    --    if _enableDefaultLog and isHeadlessInitOnce and minLevel in LogLevel.__members__ and not binaryninja.coreUIEnabled(
-    --) and sys.stderr.isatty() then
-    if _enableDefaultLog and isHeadlessInitOnce and not core.BNIsUIEnabled() then
-      log_to_stderr(LogLevel[min_level])
+    if _enableDefaultLog and isHeadlessInitOnce and LogLevel[minLevel] ~= nil and not binaryninja.coreUIEnabled()
+    -- and sys.stderr.isatty()
+    then
+      if _enableDefaultLog and isHeadlessInitOnce and not core.BNIsUIEnabled() then
+        logToStderr(LogLevel[min_level])
+      end
+      core.BNInitRepoPlugins()
     end
-    core.BNInitRepoPlugins()
-  end
 
-  if core.BNIsLicenseValidated() then
-    _pluginInit = True
-  else
-    error('License is not valid. Please supply a valid license.')
+    if core.BNIsLicenseValidated() then
+      _pluginInit = True
+    else
+      error('License is not valid. Please supply a valid license.')
+    end
   end
 end
 

@@ -49,7 +49,4 @@ function binaryninja.coreUIEnabled()
   return core.BNIsUIEnabled()
 end
 
-_enableDefaultLog = true
-_pluginInit = false
-
 return binaryninja
