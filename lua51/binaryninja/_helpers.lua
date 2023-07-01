@@ -61,7 +61,7 @@ end
 
 function helpers.isinstance(t, mt)
   if not rawequal(getmetatable(t), mt) then
-    error("instance method used as static method (did you forget to use ':' rather than '.'?)")
+    error("instance method used as static method (did you forget to use ':' rather than '.'?)", 3)
   end
 end
 
@@ -82,6 +82,10 @@ function helpers.class(t)
   end)
 
   function s:new(o)
+    if not self then
+      error(string.format('%s.new() is incorrect (use %s:new())', t.name, t.name), 2)
+    end
+
     o = o or {}
 
     newInner(s, o)
