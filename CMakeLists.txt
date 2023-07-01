@@ -94,7 +94,8 @@ set_target_properties(luaplugin PROPERTIES
         C_STANDARD_REQUIRED ON
         C_VISIBILITY_PRESET hidden
         VISIBILITY_INLINES_HIDDEN ON
-        POSITION_INDEPENDENT_CODE ON)
+        POSITION_INDEPENDENT_CODE ON
+        INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 bn_install_plugin(luaplugin)
 
@@ -102,7 +103,6 @@ string(REPLACE "\\" "/" BN_USER_PLUGINS_DIR ${BinaryNinjaCore_USER_PLUGINS_DIR})
 
 install(DIRECTORY "lua51"
         DESTINATION "${BN_USER_PLUGINS_DIR}/..")
-
 
 install(FILES ${BN_CORE_PATH} ${BN_CDEFS_PATH} ${BN_ENUMS_PATH}
         DESTINATION "${BN_USER_PLUGINS_DIR}/../lua51")
