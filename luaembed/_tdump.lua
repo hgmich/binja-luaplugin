@@ -37,8 +37,8 @@ local function _tdump(t, depth, _curdepth)
     i = i + 1
   end
   if isarray then
-    for i, k in ipairs(t) do
-      table.insert(ks, quote(t[k]))
+    for i, v in ipairs(t) do
+      table.insert(ks, quote(v))
     end
   else
     for k in pairs(t) do
