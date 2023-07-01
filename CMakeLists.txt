@@ -36,19 +36,18 @@ endif ()
 
 #find_package(Lua REQUIRED)
 
-include("${ROOT_DIR}/vendor/cmake-bin2h/bin2h.cmake")
-
-file(WRITE "${CMAKE_BINARY_DIR}/luaembed.h" "")
-file(GLOB luaembed_files "${ROOT_DIR}/luaembed/*.lua")
-foreach (file ${luaembed_files})
-    get_filename_component(LUA_EMBED_VAR_STEM "${file}" NAME_WLE)
-    string(CONCAT LUA_EMBED_VAR "LUA_CHUNK_" "${LUA_EMBED_VAR_STEM}")
-    bin2h(SOURCE_FILE "${file}"
-            HEADER_FILE "${CMAKE_BINARY_DIR}/luaembed.h"
-            VARIABLE_NAME "${LUA_EMBED_VAR}"
-            APPEND
-            NULL_TERMINATE)
-endforeach ()
+SET(LUA_EMBED_HEADER "${CMAKE_BINARY_DIR}/luaembed.h")
+SET(LUA_EMBED_FILES "${ROOT_DIR}/luaembed/*.lua")
+file(GLOB luaembed_files "${LUA_EMBED_FILES}")
+add_custom_command(
+        OUTPUT "${LUA_EMBED_HEADER}"
+        COMMAND "${CMAKE_COMMAND}"
+        -DROOT_DIR="${ROOT_DIR}"
+        -DLUA_EMBED_HEADER="${LUA_EMBED_HEADER}"
+        -DLUA_EMBED_FILES="${LUA_EMBED_FILES}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/lua_embed.cmake"
+        DEPENDS ${luaembed_files}
+)
 
 set(BN_CORE_PATH ${CMAKE_CURRENT_BINARY_DIR}/lua51/_binaryninjacore.lua)
 set(BN_CDEFS_PATH ${CMAKE_CURRENT_BINARY_DIR}/lua51/_cdefs.lua)
@@ -73,6 +72,7 @@ endif ()
 add_subdirectory(${BN_API_PATH} ${PROJECT_BINARY_DIR}/api)
 
 file(GLOB SOURCES
+        "${LUA_EMBED_HEADER}"
         *.cpp
         *.h
         lua/*.cpp
