@@ -77,7 +77,7 @@ function Settings:getString(key, view)
     view = view.handle
   end
 
-  return ffi.string(core.BNSettingsGetString(self.handle, key, view, nil))
+  return core.BNSettingsGetString(self.handle, key, view, nil)
 end
 
 function Settings:getStringList(key, view)
