@@ -19,7 +19,7 @@ static int incomplete(lua_State* L, int status)
 		size_t lmsg;
 		const char* msg = lua_tolstring(L, -1, &lmsg);
 		const char* tp = msg + lmsg - (sizeof(LUA_QL("<eof>")) - 1);
-		LogInfo("Syntax msg: %s", msg);
+		LogDebug("Syntax msg: %s", msg);
 		if (strstr(msg, LUA_QL("<eof>")) == tp && strstr(msg, "'=' expected") == nullptr)
 		{
 			lua_pop(L, 1);
@@ -49,7 +49,7 @@ namespace BNLua {
 		int startStack = lua_gettop(m_thread);
 		InputReadyStateChanged(NotReadyForInput);
 		printf("Input: %s", input.c_str());
-		LogInfo("Input: %s", input.c_str());
+		LogDebug("Input: %s", input.c_str());
 
 		int stmtChunkStatus = luaL_loadbuffer(m_thread, input.c_str(), input.length(), "=stdin");
 
@@ -68,7 +68,7 @@ namespace BNLua {
 				auto exprStr = expr.str();
 				if (LUA_OK != stmtChunkStatus)
 				{
-					LogInfo("not statement");
+					LogDebug("not statement");
 					printf("not statement\n");
 					// Save and pop message
 					savedMsg += lua_tostring(m_thread, -1);
@@ -79,7 +79,7 @@ namespace BNLua {
 
 				if (LUA_OK != exprChunkStatus)
 				{
-					LogInfo("not expression");
+					LogDebug("not expression");
 					printf("not expression\n");
 					// Throw away message as it doesn't pertain to actual user input
 					lua_pop(m_thread, 1);
@@ -100,15 +100,15 @@ namespace BNLua {
 					if (LUA_OK == chunkCallStatus)
 					{
 						printf("Good\n");
-						LogInfo("Good");
+						LogDebug("Good");
 						printf("Stack size: %d\tRet 1 type: %s\tRet 2 type: %s\n", lua_gettop(m_thread),
 							luaL_typename(m_thread, -1), luaL_typename(m_thread, -2));
-						LogInfo("Stack size: %d\tRet 1 type: %s\tRet 2 type: %s", lua_gettop(m_thread),
+						LogDebug("Stack size: %d\tRet 1 type: %s\tRet 2 type: %s", lua_gettop(m_thread),
 							luaL_typename(m_thread, -1), luaL_typename(m_thread, -2));
 						if (lua_gettop(m_thread) > 2)
 						{
 							printf("Extra stack type %s\n", luaL_typename(m_thread, -3));
-							LogInfo("Extra stack type %s", luaL_typename(m_thread, -3));
+							LogDebug("Extra stack type %s", luaL_typename(m_thread, -3));
 						}
 
 						const char* valStr = lua_tostring(m_thread, -1);
@@ -119,7 +119,7 @@ namespace BNLua {
 					else
 					{
 						printf("Bad\n");
-						LogInfo("Bad");
+						LogDebug("Bad");
 						Error(lua_tostring(m_thread, -1));
 						Error("\n");
 					}

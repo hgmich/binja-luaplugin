@@ -189,6 +189,7 @@ namespace BNLua {
 			}
 
 			auto L = *m_L;
+			m_logger->LogDebug("Loading Lua script file %s", s.c_str());
 			int result = luaL_dofile(L, s.c_str());
 
 			if (LUA_OK != result)
