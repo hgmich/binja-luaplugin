@@ -87,13 +87,13 @@ function Settings:getStringList(key, view)
   end
 
   local length = ffi.new("uint64_t[1]")
-  --length[0].value = 0ULL
+  length[0] = 0ULL
   local result = core.BNSettingsGetStringList(self.handle, key, view, nil, length)
 
   assert(result, "core.BNSettingsGetString returned nil")
 
   local outlist = {}
-  for i = 1, tonumber(length[0]) do
+  for i = 0, tonumber(length[0]) - 1 do
     table.insert(outlist, ffi.string(result[i]))
   end
 
